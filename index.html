@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Simulador de Práctica · Playbook de Resiliencia Cuántica</title>
+  <style>
+    /* ============================================================
+       ESTILOS GLOBALES - MOBILE FIRST
+       Paleta: azul marino #1B2A4A · acento naranja #C4622D
+       ============================================================ */
+    :root {
+      --color-principal: #1B2A4A;
+      --color-acento: #C4622D;
+      --color-acento-oscuro: #A84F1F;
+      --color-fondo: #F5F7FA;
+      --color-superficie: #FFFFFF;
+      --color-texto: #1B2A4A;
+      --color-texto-claro: #FFFFFF;
+      --color-correcto: #2E7D32;
+      --color-incorrecto: #C62828;
+      --color-alerta: #E53935;
+      --color-borde: #D0D7E2;
+      --color-sombra: rgba(27, 42, 74, 0.08);
+      --radio: 12px;
+      --fuente: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--fuente);
+      background-color: var(--color-fondo);
+      color: var(--color-texto);
+      font-size: 16px;
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============================================================
+       HEADER STICKY - Temporizador + Progreso
+       ============================================================ */
+    #stickyHeader {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--color-principal);
+      color: var(--color-texto-claro);
+      padding: 10px 16px 12px;
+      box-shadow: 0 2px 8px var(--color-sombra);
+      border-bottom: 2px solid var(--color-acento);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #progresoTexto {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    #timerDisplay {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      border-radius: 8px;
+      min-width: 70px;
+      text-align: center;
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
+
+    #timerDisplay.alerta {
+      color: #FFD2D2;
+      background-color: rgba(229, 57, 53, 0.35);
+      border: 1px solid var(--color-alerta);
+      animation: pulsar 1s infinite alternate;
+    }
+
+    @keyframes pulsar {
+      from { opacity: 1; }
+      to { opacity: 0.6; }
+    }
+
+    /* Barra de progreso tipo posta */
+    .progress-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .progress-segment {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      background-color: #3A4A6B;
+      transition: background-color 0.4s ease, opacity 0.4s ease;
+    }
+
+    .progress-segment.activo {
+      background-color: var(--color-acento);
+      opacity: 1;
+      box-shadow: 0 0 8px rgba(196, 98, 45, 0.6);
+    }
+
+    .progress-segment.completado {
+      background-color: #E0A17A;
+      opacity: 0.7;
+    }
+
+    .progress-segment.pendiente {
+      background-color: #3A4A6B;
+      opacity: 0.5;
+    }
+
+    /* ============================================================
+       CONTENEDOR PRINCIPAL - Una sola columna
+       ============================================================ */
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: calc(100vh - 100px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tarjeta de contenido */
+    .card {
+      background-color: var(--color-superficie);
+      border-radius: var(--radio);
+      box-shadow: 0 4px 16px var(--color-sombra);
+      padding: 24px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============================================================
+       PANTALLA DE BIENVENIDA
+       ============================================================ */
+    .bienvenida {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      min-height: 60vh;
+    }
+
+    .bienvenida .icono {
+      font-size: 3rem;
+      margin-bottom: 8px;
+    }
+
+    .bienvenida h1 {
+      font-size: 1.8rem;
+      color: var(--color-principal);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .bienvenida .subtitulo {
+      font-size: 1rem;
+      color: #4A5A7A;
+      max-width: 90%;
+      margin: 0 auto;
+    }
+
+    .bienvenida .detalles {
+      font-size: 0.9rem;
+      color: #5A6A8A;
+      background-color: #F0F4F8;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: left;
+      width: 100%;
+      list-style: none;
+    }
+
+    .bienvenida .detalles li {
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bienvenida .detalles li::before {
+      content: "▸";
+      color: var(--color-acento);
+      font-weight: bold;
+    }
+
+    /* ============================================================
+       BOTONES GENERALES
+       ============================================================ */
+    button {
+      font-family: var(--fuente);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 48px;
+      padding: 12px 18px;
+      width: 100%;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primario {
+      background-color: var(--color-acento);
+      color: var(--color-texto-claro);
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 8px rgba(196, 98, 45, 0.3);
+    }
+
+    .btn-primario:hover {
+      background-color: var(--color-acento-oscuro);
+    }
+
+    .btn-secundario {
+      background-color: var(--color-principal);
+      color: var(--color-texto-claro);
+      font-weight: 600;
+    }
+
+    .btn-secundario:hover {
+      background-color: #24365A;
+    }
+
+    /* ============================================================
+       PREGUNTAS Y OPCIONES
+       ============================================================ */
+    .estacion-titulo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-principal);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 4px solid var(--color-acento);
+      padding-left: 12px;
+    }
+
+    .pregunta-texto {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .opciones {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .opcion {
+      background-color: #F9FAFC;
+      border: 2px solid var(--color-borde);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 1rem;
+      color: var(--color-texto);
+      transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .opcion::before {
+      content: attr(data-letra);
+      font-weight: 700;
+      color: var(--color-acento);
+      font-size: 0.9rem;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: rgba(196, 98, 45, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .opcion:hover:not(:disabled) {
+      border-color: var(--color-acento);
+      background-color: #FDF1EA;
+    }
+
+    .opcion:disabled {
+      cursor: default;
+      opacity: 0.85;
+    }
+
+    .opcion.correcta {
+      background-color: #E8F5E9;
+      border-color: var(--color-correcto);
+      color: #1B3B1F;
+    }
+
+    .opcion.correcta::before {
+      color: var(--color-correcto);
+      background-color: rgba(46, 125, 50, 0.15);
+    }
+
+    .opcion.incorrecta {
+      background-color: #FFEBEE;
+      border-color: var(--color-incorrecto);
+      color: #4A1A1A;
+    }
+
+    .opcion.incorrecta::before {
+      color: var(--color-incorrecto);
+      background-color: rgba(198, 40, 40, 0.12);
+    }
+
+    .opcion .letra {
+      font-weight: 700;
+      margin-right: 8px;
+      color: var(--color-acento);
+    }
+
+    /* Feedback */
+    .feedback {
+      border-radius: 10px;
+      padding: 16px;
+      margin: 16px 0 12px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      display: none;
+      border-left: 4px solid transparent;
+    }
+
+    .feedback.correcto {
+      display: block;
+      background-color: #E8F5E9;
+      border-left-color: var(--color-correcto);
+      color: #1B3B1F;
+    }
+
+    .feedback.incorrecto {
+      display: block;
+      background-color: #FFEBEE;
+      border-left-color: var(--color-incorrecto);
+      color: #4A1A1A;
+    }
+
+    .feedback .titulo-feedback {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .btn-continuar {
+      background-color: var(--color-acento);
+      color: var(--color-texto-claro);
+      font-weight: 700;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .btn-continuar:hover {
+      background-color: var(--color-acento-oscuro);
+    }
+
+    /* Mensaje de tiempo agotado */
+    .mensaje-tiempo-agotado {
+      text-align: center;
+      padding: 30px 20px;
+      background-color: #FFF8F6;
+      border-radius: var(--radio);
+      border: 2px solid var(--color-alerta);
+    }
+
+    .mensaje-tiempo-agotado .icono {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .mensaje-tiempo-agotado h3 {
+      color: var(--color-alerta);
+      margin-bottom: 8px;
+    }
+
+    /* ============================================================
+       RESULTADOS
+       ============================================================ */
+    .resultados-titulo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--color-principal);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .resultado-resumen {
+      background-color: #F0F4F8;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .resultado-resumen .puntaje-total {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--color-acento);
+    }
+
+    .resultado-resumen .tiempo-total {
+      font-size: 0.95rem;
+      color: #4A5A7A;
+      margin-top: 4px;
+    }
+
+    .tarjetas-estaciones {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .tarjeta-estacion {
+      background-color: #F9FAFC;
+      border: 1px solid var(--color-borde);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .tarjeta-estacion .nombre {
+      font-weight: 600;
+      color: var(--color-principal);
+      margin-bottom: 6px;
+    }
+
+    .tarjeta-estacion .detalle {
+      font-size: 0.9rem;
+      color: #4A5A7A;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mensaje-final {
+      text-align: center;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .mensaje-final.excelente {
+      background-color: #E8F5E9;
+      color: #1B3B1F;
+    }
+
+    .mensaje-final.bueno {
+      background-color: #FFF8E1;
+      color: #5D4A00;
+    }
+
+    .mensaje-final.regular {
+      background-color: #FFF3E0;
+      color: #5D3A00;
+    }
+
+    .mensaje-final.bajo {
+      background-color: #FFEBEE;
+      color: #4A1A1A;
+    }
+
+    .btn-reiniciar {
+      margin-top: auto;
+    }
+
+    /* ============================================================
+       UTILIDADES
+       ============================================================ */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ============================================================
+       MEDIA QUERIES PARA PANTALLAS MAYORES
+       ============================================================ */
+    @media (min-width: 640px) {
+      main {
+        padding: 24px;
+      }
+      .card {
+        padding: 32px 28px;
+      }
+      .bienvenida h1 {
+        font-size: 2.2rem;
+      }
+      #timerDisplay {
+        font-size: 1.5rem;
+        min-width: 90px;
+      }
+    }
+
+    @media (max-width: 350px) {
+      .header-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+      #progresoTexto {
+        font-size: 0.85rem;
+      }
+      #timerDisplay {
+        font-size: 1.1rem;
+        padding: 4px 8px;
+      }
+      .opcion {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+      }
+      .card {
+        padding: 18px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       HEADER STICKY - Temporizador y progreso tipo posta
+       ============================================================ -->
+  <header id="stickyHeader">
+    <div class="header-top">
+      <span id="progresoTexto">Bienvenida</span>
+      <span id="timerDisplay">05:00</span>
+    </div>
+    <div class="progress-bar" id="progressBar" aria-hidden="true">
+      <div class="progress-segment pendiente" data-index="0"></div>
+      <div class="progress-segment pendiente" data-index="1"></div>
+      <div class="progress-segment pendiente" data-index="2"></div>
+      <div class="progress-segment pendiente" data-index="3"></div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       CONTENEDOR PRINCIPAL
+       ============================================================ -->
+  <main id="app">
+    <div class="card">
+      <!-- El contenido se renderiza dinámicamente con JS -->
+      <div id="vistaDinamica"></div>
+    </div>
+  </main>
+
+  <script>
+    /* ============================================================
+       SIMULADOR DE PRÁCTICA TIPO POSTAS
+       Playbook de Resiliencia Cuántica - Gobernanza y Estrategia
+       ============================================================ */
+
+    // ============================================================
+    // CONSTANTES EDITABLES
+    // ============================================================
+    const TIEMPO_POR_ESTACION_SEG = 300; // 5 minutos generosos por estación
+    const TIEMPO_ALERTA_SEG = 60;        // Cambia a color de alerta cuando quedan 60s
+
+    // ============================================================
+    // DATOS DE LAS ESTACIONES Y PREGUNTAS
+    // (Editar libremente: texto, opciones, correcta, explicacion)
+    // ============================================================
+    const estacionesData = [
+      {
+        titulo: "Estación 1 - Inventario (Quantum Readiness)",
+        preguntas: [
+          {
+            texto: "¿Qué significa el acrónimo HNDL en el contexto de Quantum Readiness?",
+            opciones: [
+              "Harvest Now, Decrypt Later",
+              "High Network Data Loss",
+              "Hybrid Network Decryption Layer",
+              "Hardware Non-Deterministic Logic"
+            ],
+            correcta: 0,
+            explicacion: "HNDL describe cómo los adversarios roban datos cifrados hoy para descifrarlos cuando llegue la computación cuántica."
+          },
+          {
+            texto: "¿Cuál de los siguientes algoritmos es más vulnerable a la computación cuántica?",
+            opciones: [
+              "AES-256",
+              "SHA-384",
+              "RSA-2048",
+              "ChaCha20"
+            ],
+            correcta: 2,
+            explicacion: "RSA-2048 y ECC (criptografía asimétrica) son vulnerables; AES-256, SHA-384 y ChaCha20 son más resistentes."
+          },
+          {
+            texto: "En la auditoría de inventario, ¿cuál es el primer paso?",
+            opciones: [
+              "Priorización de riesgos con HNDL",
+              "Descubrimiento de activos con criptografía vulnerable",
+              "Evaluación de exposición localizando certificados",
+              "Monitoreo continuo"
+            ],
+            correcta: 1,
+            explicacion: "Primero se descubren los activos, luego se evalúa exposición y finalmente se prioriza el riesgo."
+          },
+          {
+            texto: "¿Cómo se determina el riesgo según el modelo HNDL?",
+            opciones: [
+              "Comparando el costo del algoritmo con el presupuesto",
+              "Comparando la vida útil del dato con la fecha estimada de Q-Day",
+              "Según el tamaño de la clave",
+              "Según el fabricante del hardware"
+            ],
+            correcta: 1,
+            explicacion: "Si la vida útil del dato supera la fecha estimada de llegada de la amenaza cuántica (Q-Day), el riesgo es alto."
+          },
+          {
+            texto: "¿Cuál de estos algoritmos se considera más resistente a la computación cuántica?",
+            opciones: [
+              "ECC",
+              "RSA-2048",
+              "AES-256",
+              "DSA"
+            ],
+            correcta: 2,
+            explicacion: "AES-256 es criptografía simétrica y se considera resistente; RSA, ECC y DSA son asimétricos vulnerables."
+          }
+        ]
+      },
+      {
+        titulo: "Estación 2 - Cumplimiento (Ecosistema Regulatorio)",
+        preguntas: [
+          {
+            texto: "¿Qué organismo publica estándares FIPS para algoritmos poscuánticos aprobados?",
+            opciones: [
+              "CISA",
+              "GDPR",
+              "NIST",
+              "ISO"
+            ],
+            correcta: 2,
+            explicacion: "NIST es responsable de los estándares FIPS para algoritmos poscuánticos aprobados."
+          },
+          {
+            texto: "¿Cuál es el rol de CISA en el ecosistema regulatorio?",
+            opciones: [
+              "Emitir multas por incumplimiento",
+              "Mitigación de riesgos sistémicos en infraestructuras críticas",
+              "Definir algoritmos de cifrado",
+              "Auditar certificados digitales"
+            ],
+            correcta: 1,
+            explicacion: "CISA se enfoca en mitigar riesgos sistémicos en infraestructuras críticas."
+          },
+          {
+            texto: "¿Qué exigen el GDPR y la normativa local?",
+            opciones: [
+              "Solo notificar brechas",
+              "Protección de datos de vanguardia",
+              "Uso de hardware específico",
+              "Almacenamiento en la nube"
+            ],
+            correcta: 1,
+            explicacion: "GDPR y normas locales exigen protección de datos con las mejores prácticas disponibles."
+          },
+          {
+            texto: "¿Cuál es la idea clave de esta estación?",
+            opciones: [
+              "La seguridad técnica es suficiente",
+              "La seguridad técnica es insuficiente sin cumplimiento legal",
+              "El cumplimiento reemplaza a la seguridad",
+              "La seguridad y el cumplimiento son independientes"
+            ],
+            correcta: 1,
+            explicacion: "Debe integrarse seguridad técnica y cumplimiento legal; una sin la otra no es suficiente."
+          },
+          {
+            texto: "¿Qué son los estándares FIPS?",
+            opciones: [
+              "Estándares para algoritmos poscuánticos aprobados",
+              "Protocolos de red",
+              "Normas de privacidad",
+              "Certificaciones de hardware"
+            ],
+            correcta: 0,
+            explicacion: "FIPS define algoritmos criptográficos aprobados, incluyendo los poscuánticos."
+          }
+        ]
+      },
+      {
+        titulo: "Estación 3 - Migración (Agility-First)",
+        preguntas: [
+          {
+            texto: "¿Qué caracteriza al enfoque Crypto-Agility?",
+            opciones: [
+              "Hardware propietario fijo",
+              "Sistemas modulares actualizables por software/firmware",
+              "Postura estática",
+              "Dependencia de un solo algoritmo"
+            ],
+            correcta: 1,
+            explicacion: "Crypto-Agility permite evolucionar con la amenaza mediante módulos actualizables por software/firmware."
+          },
+          {
+            texto: "¿Cuál es la segunda fase de la migración?",
+            opciones: [
+              "Auditoría de dependencias heredadas",
+              "Transición híbrida (clásica + PQC)",
+              "Monitoreo y ajuste continuo",
+              "Reemplazo total de hardware"
+            ],
+            correcta: 1,
+            explicacion: "La fase 2 es la transición híbrida que combina criptografía clásica y poscuántica."
+          },
+          {
+            texto: "¿En qué consiste el mecanismo de \"doble cerradura\"?",
+            opciones: [
+              "Dos llaves físicas",
+              "Protección simultánea con algoritmo clásico y PQC",
+              "Doble cifrado simétrico",
+              "Copia de seguridad duplicada"
+            ],
+            correcta: 1,
+            explicacion: "El dato queda protegido por dos algoritmos; el atacante debe romper ambos."
+          },
+          {
+            texto: "¿Qué resultado busca la \"doble cerradura\"?",
+            opciones: [
+              "Mayor velocidad de cifrado",
+              "Cero interrupciones operativas durante la migración",
+              "Reducción de costos",
+              "Cumplimiento automático"
+            ],
+            correcta: 1,
+            explicacion: "Permite migrar sin detener las operaciones, evitando interrupciones."
+          },
+          {
+            texto: "¿La migración poscuántica es un evento único?",
+            opciones: [
+              "Sí, se realiza una sola vez",
+              "No, es un proceso iterativo",
+              "Solo si cambia la regulación",
+              "Depende del hardware"
+            ],
+            correcta: 1,
+            explicacion: "La migración es continua y se ajusta con la evolución de la amenaza."
+          }
+        ]
+      },
+      {
+        titulo: "Estación 4 - Identidad (IAM)",
+        preguntas: [
+          {
+            texto: "En Cloud/Macro, ¿qué implica la PKI Post-Cuántica?",
+            opciones: [
+              "Reemplazar todos los servidores",
+              "Actualización de Autoridades de Certificación y cadenas de confianza",
+              "Eliminar el cifrado",
+              "Usar solo claves simétricas"
+            ],
+            correcta: 1,
+            explicacion: "Se actualizan las CA y cadenas de confianza para resistir ataques cuánticos."
+          },
+          {
+            texto: "En Edge/Micro, ¿qué componente se utiliza para identidad de dispositivos IoT?",
+            opciones: [
+              "Software antivirus",
+              "Hardware confiable como TPM/TrustZone",
+              "Firewall perimetral",
+              "VPN"
+            ],
+            correcta: 1,
+            explicacion: "TPM/TrustZone proporcionan raíz de confianza hardware para dispositivos IoT."
+          },
+          {
+            texto: "¿Cómo deben ser los certificados en dispositivos IoT?",
+            opciones: [
+              "Renovados manualmente cada año",
+              "Resistentes desde su aprovisionamiento",
+              "Opcionales",
+              "Solo para servidores"
+            ],
+            correcta: 1,
+            explicacion: "Deben ser resistentes desde el inicio para asegurar la identidad del dispositivo."
+          },
+          {
+            texto: "¿Dónde debe asegurarse la confianza según la estación?",
+            opciones: [
+              "Solo en el núcleo (PKI)",
+              "Solo en el borde físico (IoT)",
+              "Tanto en el núcleo como en el borde físico",
+              "En la nube únicamente"
+            ],
+            correcta: 2,
+            explicacion: "La confianza debe abarcar PKI (núcleo) e IoT (borde) para ser completa."
+          },
+          {
+            texto: "¿Qué representa \"Edge/Micro\" en IAM?",
+            opciones: [
+              "Identidad de usuarios corporativos",
+              "Identidad de dispositivos IoT",
+              "Servidores centrales",
+              "Certificados raíz"
+            ],
+            correcta: 1,
+            explicacion: "Edge/Micro se refiere a dispositivos IoT en el borde de la red."
+          }
+        ]
+      }
+    ];
+
+    // ============================================================
+    // ESTADO DE LA APLICACIÓN (todo en memoria, sin localStorage)
+    // ============================================================
+    const estado = {
+      estacionIndex: 0,          // índice de la estación actual (0 a 3)
+      preguntaIndex: 0,          // índice de la pregunta actual dentro de la estación
+      respuestas: [[], [], [], []], // respuestas[estacion][pregunta] = índice seleccionado o null
+      resultados: [],            // resultados por estación: { puntaje, total, tiempoUsado }
+      inicioTotal: null,         // timestamp al iniciar simulacro
+      finTotal: null,            // timestamp al finalizar
+      timerEstacion: null,       // id del setInterval del temporizador de estación
+      tiempoRestante: TIEMPO_POR_ESTACION_SEG,
+      enProgreso: false,
+      bloqueado: false,          // para evitar acciones durante mensajes automáticos
+      tiempoAgotado: false
+    };
+
+    // ============================================================
+    // REFERENCIAS AL DOM
+    // ============================================================
+    const vistaDinamica = document.getElementById('vistaDinamica');
+    const progresoTexto = document.getElementById('progresoTexto');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const segmentos = progressBar.querySelectorAll('.progress-segment');
+
+    // ============================================================
+    // FUNCIONES UTILITARIAS
+    // ============================================================
+    function formatearTiempo(segundos) {
+      if (segundos < 0) segundos = 0;
+      const min = Math.floor(segundos / 60);
+      const seg = segundos % 60;
+      return `${String(min).padStart(2, '0')}:${String(seg).padStart(2, '0')}`;
+    }
+
+    function actualizarHeader() {
+      if (estado.estacionIndex < estacionesData.length && estado.enProgreso) {
+        progresoTexto.textContent = `Estación ${estado.estacionIndex + 1} de ${estacionesData.length}`;
+      } else if (estado.finTotal !== null) {
+        progresoTexto.textContent = 'Resultados';
+      } else {
+        progresoTexto.textContent = 'Bienvenida';
+      }
+      // Actualizar segmentos de barra de progreso
+      segmentos.forEach((segmento, index) => {
+        segmento.classList.remove('activo', 'completado', 'pendiente');
+        if (estado.finTotal !== null) {
+          segmento.classList.add('completado');
+        } else if (index < estado.estacionIndex) {
+          segmento.classList.add('completado');
+        } else if (index === estado.estacionIndex) {
+          segmento.classList.add('activo');
+        } else {
+          segmento.classList.add('pendiente');
+        }
+      });
+    }
+
+    function actualizarTimerDisplay() {
+      timerDisplay.textContent = formatearTiempo(estado.tiempoRestante);
+      if (estado.tiempoRestante <= TIEMPO_ALERTA_SEG && estado.tiempoRestante > 0) {
+        timerDisplay.classList.add('alerta');
+      } else {
+        timerDisplay.classList.remove('alerta');
+      }
+      if (estado.tiempoRestante <= 0) {
+        timerDisplay.textContent = '00:00';
+        timerDisplay.classList.add('alerta');
+      }
+    }
+
+    // ============================================================
+    // TEMPORIZADOR DE ESTACIÓN
+    // ============================================================
+    function iniciarTemporizadorEstacion() {
+      clearInterval(estado.timerEstacion);
+      estado.tiempoRestante = TIEMPO_POR_ESTACION_SEG;
+      estado.tiempoAgotado = false;
+      estado.bloqueado = false;
+      actualizarTimerDisplay();
+      estado.timerEstacion = setInterval(() => {
+        if (!estado.enProgreso) return;
+        estado.tiempoRestante--;
+        actualizarTimerDisplay();
+        if (estado.tiempoRestante <= 0) {
+          clearInterval(estado.timerEstacion);
+          estado.tiempoAgotado = true;
+          manejarTiempoAgotado();
+        }
+      }, 1000);
+    }
+
+    function detenerTemporizadorEstacion() {
+      clearInterval(estado.timerEstacion);
+    }
+
+    // ============================================================
+    // MANEJO DE TIEMPO AGOTADO
+    // ============================================================
+    function manejarTiempoAgotado() {
+      if (estado.bloqueado) return;
+      estado.bloqueado = true;
+
+      // Marcar preguntas restantes como no respondidas (null)
+      const totalPreguntas = estacionesData[estado.estacionIndex].preguntas.length;
+      let sinResponder = 0;
+      for (let i = 0; i < totalPreguntas; i++) {
+        const respuestaActual = estado.respuestas[estado.estacionIndex][i];
+        if (respuestaActual === null || respuestaActual === undefined) {
+          estado.respuestas[estado.estacionIndex][i] = null;
+          sinResponder++;
+        }
+      }
+
+      // Mostrar mensaje de tiempo agotado
+      vistaDinamica.innerHTML = `
+        <div class="mensaje-tiempo-agotado">
+          <div class="icono">⏱️</div>
+          <h3>Tiempo agotado</h3>
+          <p>${estacionesData[estado.estacionIndex].titulo}</p>
+          <p>Preguntas sin responder: <strong>${sinResponder}</strong></p>
+          <p style="margin-top: 8px; font-size: 0.9rem; color: #666;">Avanzando automáticamente...</p>
+        </div>
+      `;
+
+      // Después de 2.5 segundos, finalizar estación y avanzar
+      setTimeout(() => {
+        finalizarEstacion(true);
+      }, 2500);
+    }
+
+    // ============================================================
+    // RENDERIZADO DE PANTALLAS
+    // ============================================================
+    function mostrarBienvenida() {
+      estado.enProgreso = false;
+      estado.finTotal = null;
+      estado.estacionIndex = 0;
+      estado.preguntaIndex = 0;
+      estado.respuestas = [[], [], [], []];
+      estado.resultados = [];
+      estado.inicioTotal = null;
+      estado.tiempoRestante = TIEMPO_POR_ESTACION_SEG;
+      estado.bloqueado = false;
+      clearInterval(estado.timerEstacion);
+      actualizarTimerDisplay();
+      timerDisplay.textContent = formatearTiempo(TIEMPO_POR_ESTACION_SEG);
+      progresoTexto.textContent = 'Bienvenida';
+      segmentos.forEach(seg => seg.classList.remove('activo', 'completado', 'pendiente'));
+      segmentos.forEach(seg => seg.classList.add('pendiente'));
+
+      vistaDinamica.innerHTML = `
+        <div class="bienvenida">
+          <div class="icono">🛡️</div>
+          <h1>Simulador de Práctica<br>Playbook de Resiliencia Cuántica</h1>
+          <p class="subtitulo">
+            Gobernanza y Estrategia de Migración<br>
+            <small>Para analistas de seguridad y CISOs</small>
+          </p>
+          <ul class="detalles">
+            <li>4 estaciones tipo posta (relevo)</li>
+            <li>${TIEMPO_POR_ESTACION_SEG / 60} minutos por estación</li>
+            <li>5 preguntas por estación</li>
+            <li>Feedback inmediato con explicación</li>
+          </ul>
+          <button class="btn-primario" onclick="iniciarSimulacro()">Comenzar simulacro</button>
+        </div>
+      `;
+    }
+
+    function iniciarSimulacro() {
+      estado.enProgreso = true;
+      estado.inicioTotal = Date.now();
+      estado.finTotal = null;
+      estado.estacionIndex = 0;
+      estado.preguntaIndex = 0;
+      estado.respuestas = [[], [], [], []];
+      estado.resultados = [];
+      estado.bloqueado = false;
+      actualizarHeader();
+      renderizarEstacion();
+      iniciarTemporizadorEstacion();
+    }
+
+    function renderizarEstacion() {
+      estado.bloqueado = false;
+      actualizarHeader();
+      renderizarPregunta();
+    }
+
+    function renderizarPregunta() {
+      const estacion = estacionesData[estado.estacionIndex];
+      const pregunta = estacion.preguntas[estado.preguntaIndex];
+      const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+      let opcionesHTML = '';
+      pregunta.opciones.forEach((opcion, idx) => {
+        opcionesHTML += `
+          <button class="opcion" data-letra="${letras[idx]}" data-index="${idx}" onclick="seleccionarRespuesta(${idx})" ${estado.bloqueado ? 'disabled' : ''}>
+            ${opcion}
+          </button>
+        `;
+      });
+
+      vistaDinamica.innerHTML = `
+        <div class="estacion-titulo">🏁 ${estacion.titulo}</div>
+        <div class="pregunta-texto">${estado.preguntaIndex + 1}. ${pregunta.texto}</div>
+        <div class="opciones" id="opcionesContainer">
+          ${opcionesHTML}
+        </div>
+        <div id="feedbackArea"></div>
+        <button id="btnContinuar" class="btn-continuar" onclick="siguientePregunta()" style="display: none;">Continuar →</button>
+      `;
+    }
+
+    // ============================================================
+    // LÓGICA DE RESPUESTA
+    // ============================================================
+    function seleccionarRespuesta(indiceSeleccionado) {
+      if (estado.bloqueado || !estado.enProgreso) return;
+      const estacion = estacionesData[estado.estacionIndex];
+      const pregunta = estacion.preguntas[estado.preguntaIndex];
+      const esCorrecta = indiceSeleccionado === pregunta.correcta;
+
+      // Guardar respuesta
+      estado.respuestas[estado.estacionIndex][estado.preguntaIndex] = indiceSeleccionado;
+
+      // Deshabilitar todas las opciones
+      const botonesOpciones = document.querySelectorAll('.opcion');
+      botonesOpciones.forEach((boton, idx) => {
+        boton.disabled = true;
+        if (idx === pregunta.correcta) {
+          boton.classList.add('correcta');
+        } else if (idx === indiceSeleccionado && !esCorrecta) {
+          boton.classList.add('incorrecta');
+        }
+      });
+
+      // Mostrar feedback
+      const feedbackArea = document.getElementById('feedbackArea');
+      feedbackArea.innerHTML = `
+        <div class="feedback ${esCorrecta ? 'correcto' : 'incorrecto'}">
+          <span class="titulo-feedback">${esCorrecta ? '✅ Correcto' : '❌ Incorrecto'}</span>
+          ${pregunta.explicacion}
+        </div>
+      `;
+      feedbackArea.style.display = 'block';
+
+      // Mostrar botón continuar
+      const btnContinuar = document.getElementById('btnContinuar');
+      btnContinuar.style.display = 'block';
+    }
+
+    function siguientePregunta() {
+      if (estado.bloqueado || !estado.enProgreso) return;
+      const totalPreguntas = estacionesData[estado.estacionIndex].preguntas.length;
+      if (estado.preguntaIndex + 1 < totalPreguntas) {
+        estado.preguntaIndex++;
+        renderizarPregunta();
+      } else {
+        // Última pregunta respondida, finalizar estación
+        finalizarEstacion(false);
+      }
+    }
+
+    // ============================================================
+    // FINALIZAR ESTACIÓN
+    // ============================================================
+    function finalizarEstacion(porTiempo) {
+      if (estado.bloqueado && !porTiempo) return; // evitar doble finalización
+      detenerTemporizadorEstacion();
+      estado.bloqueado = true;
+
+      const estacionIndex = estado.estacionIndex;
+      const estacion = estacionesData[estacionIndex];
+      const totalPreguntas = estacion.preguntas.length;
+      const respuestasEstacion = estado.respuestas[estacionIndex];
+
+      // Calcular puntaje
+      let puntaje = 0;
+      for (let i = 0; i < totalPreguntas; i++) {
+        const resp = respuestasEstacion[i];
+        if (resp !== null && resp !== undefined && resp === estacion.preguntas[i].correcta) {
+          puntaje++;
+        }
+      }
+
+      // Tiempo usado
+      const tiempoUsado = porTiempo ? TIEMPO_POR_ESTACION_SEG : (TIEMPO_POR_ESTACION_SEG - estado.tiempoRestante);
+
+      // Guardar resultado de la estación
+      estado.resultados[estacionIndex] = {
+        puntaje: puntaje,
+        total: totalPreguntas,
+        tiempoUsado: tiempoUsado
+      };
+
+      // Avanzar a siguiente estación o mostrar resultados
+      if (estacionIndex + 1 < estacionesData.length) {
+        estado.estacionIndex++;
+        estado.preguntaIndex = 0;
+        estado.bloqueado = false;
+        renderizarEstacion();
+        iniciarTemporizadorEstacion();
+      } else {
+        // Simulacro completo
+        estado.finTotal = Date.now();
+        mostrarResultados();
+      }
+    }
+
+    // ============================================================
+    // RESULTADOS FINALES
+    // ============================================================
+    function mostrarResultados() {
+      detenerTemporizadorEstacion();
+      estado.enProgreso = false;
+      estado.bloqueado = true;
+
+      // Calcular tiempo total en segundos
+      const tiempoTotalSeg = Math.floor((estado.finTotal - estado.inicioTotal) / 1000);
+
+      // Calcular puntaje total
+      let puntajeTotal = 0;
+      let totalPreguntas = 0;
+      estado.resultados.forEach(res => {
+        puntajeTotal += res.puntaje;
+        totalPreguntas += res.total;
+      });
+      const porcentaje = totalPreguntas > 0 ? Math.round((puntajeTotal / totalPreguntas) * 100) : 0;
+
+      // Determinar mensaje según desempeño
+      let claseMensaje, textoMensaje;
+      if (porcentaje >= 80) {
+        claseMensaje = 'excelente';
+        textoMensaje = '🌟 Excelente dominio del Playbook de Resiliencia Cuántica. Estás listo para liderar la estrategia de migración.';
+      } else if (porcentaje >= 60) {
+        claseMensaje = 'bueno';
+        textoMensaje = '👏 Buen trabajo. Conocés los conceptos clave, pero conviene repasar algunas estaciones.';
+      } else if (porcentaje >= 40) {
+        claseMensaje = 'regular';
+        textoMensaje = '📖 Necesitás reforzar conceptos del playbook. Repasá las estaciones con puntaje más bajo.';
+      } else {
+        claseMensaje = 'bajo';
+        textoMensaje = '⚠️ Se recomienda un repaso profundo del playbook antes de avanzar en la práctica.';
+      }
+
+      // Construir tarjetas por estación
+      let tarjetasHTML = '';
+      estado.resultados.forEach((res, idx) => {
+        const porcentajeEstacion = res.total > 0 ? Math.round((res.puntaje / res.total) * 100) : 0;
+        tarjetasHTML += `
+          <div class="tarjeta-estacion">
+            <div class="nombre">🏁 ${estacionesData[idx].titulo}</div>
+            <div class="detalle">
+              <span>Puntaje: ${res.puntaje}/${res.total} (${porcentajeEstacion}%)</span>
+              <span>Tiempo: ${formatearTiempo(res.tiempoUsado)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      // Actualizar header para resultados
+      progresoTexto.textContent = 'Resultados';
+      timerDisplay.textContent = formatearTiempo(tiempoTotalSeg);
+      timerDisplay.classList.remove('alerta');
+      segmentos.forEach(seg => seg.classList.remove('activo', 'pendiente'));
+      segmentos.forEach(seg => seg.classList.add('completado'));
+
+      vistaDinamica.innerHTML = `
+        <div class="resultados-titulo">📊 Resultados del Simulacro</div>
+        <div class="resultado-resumen">
+          <div class="puntaje-total">${puntajeTotal} / ${totalPreguntas} (${porcentaje}%)</div>
+          <div class="tiempo-total">Tiempo total: ${formatearTiempo(tiempoTotalSeg)}</div>
+        </div>
+        <div class="tarjetas-estaciones">
+          ${tarjetasHTML}
+        </div>
+        <div class="mensaje-final ${claseMensaje}">
+          ${textoMensaje}
+        </div>
+        <button class="btn-reiniciar btn-secundario" onclick="reiniciarSimulacro()">Reiniciar simulacro</button>
+      `;
+    }
+
+    // ============================================================
+    // REINICIAR
+    // ============================================================
+    function reiniciarSimulacro() {
+      clearInterval(estado.timerEstacion);
+      estado.enProgreso = false;
+      estado.bloqueado = false;
+      estado.finTotal = null;
+      estado.estacionIndex = 0;
+      estado.preguntaIndex = 0;
+      estado.respuestas = [[], [], [], []];
+      estado.resultados = [];
+      estado.inicioTotal = null;
+      estado.tiempoRestante = TIEMPO_POR_ESTACION_SEG;
+      estado.tiempoAgotado = false;
+      mostrarBienvenida();
+    }
+
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
+    // Mostrar pantalla de bienvenida al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      mostrarBienvenida();
+    });
+  </script>
+</body>
+</html>
